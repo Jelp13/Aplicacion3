@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora HTML, CSS y JavaScript</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+        
+        .calculator {
+            width: 300px;
+            background-color: #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .display {
+            width: 100%;
+            height: 70px;
+            background-color: #222;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: right;
+            font-size: 2.5rem;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+        }
+        
+        button {
+            height: 60px;
+            background-color: #444;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #555;
+        }
+        
+        .operator {
+            background-color: #ff9f0a;
+        }
+        
+        .operator:hover {
+            background-color: #ffb143;
+        }
+        
+        .clear, .backspace {
+            background-color: #a5a5a5;
+            color: black;
+        }
+        
+        .clear:hover, .backspace:hover {
+            background-color: #c4c4c4;
+        }
+        
+        .equals {
+            background-color: #ff9f0a;
+        }
+        
+        .equals:hover {
+            background-color: #ffb143;
+        }
+        
+        .zero {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="backspace" onclick="backspace()">⌫</button>
+            <button class="operator" onclick="toggleSign()">±</button>
+            <button class="operator" onclick="setOperation('÷')">÷</button>
+            
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="setOperation('×')">×</button>
+            
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="setOperation('-')">-</button>
+            
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="setOperation('+')">+</button>
+            
+            <button class="zero" onclick="appendNumber('0')">0</button>
+            <button onclick="appendDecimal()">.</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+    </div>
+    
+    <script>
+        let displayValue = '0';
+        let previousValue = null;
+        let operation = null;
+        let resetDisplay = false;
+        
+        const display = document.getElementById('display');
+        
+        function updateDisplay() {
+            // Limit the number of digits to prevent overflow
+            if (displayValue.length > 12) {
+                displayValue = displayValue.substring(0, 12);
+            }
+            display.textContent = displayValue;
+        }
+        
+        function appendNumber(number) {
+            if (displayValue === '0' || resetDisplay) {
+                displayValue = number;
+                resetDisplay = false;
+            } else {
+                displayValue += number;
+            }
+            updateDisplay();
+        }
+        
+        function appendDecimal() {
+            if (resetDisplay) {
+                displayValue = '0.';
+                resetDisplay = false;
+            } else if (!displayValue.includes('.')) {
+                displayValue += '.';
+            }
+            updateDisplay();
+        }
+        
+        function setOperation(op) {
+            const value = parseFloat(displayValue);
+            
+            if (previousValue === null) {
+                previousValue = value;
+            } else if (operation) {
+                const result = performCalculation();
+                previousValue = result;
+                displayValue = String(result);
+                updateDisplay();
+            }
+            
+            operation = op;
+            resetDisplay = true;
+        }
+        
+        function performCalculation() {
+            const currentValue = parseFloat(displayValue);
+            let result;
+            
+            switch (operation) {
+                case '+':
+                    result = previousValue + currentValue;
+                    break;
+                case '-':
+                    result = previousValue - currentValue;
+                    break;
+                case '×':
+                    result = previousValue * currentValue;
+                    break;
+                case '÷':
+                    result = currentValue !== 0 ? previousValue / currentValue : 'Error';
+                    break;
+                default:
+                    return currentValue;
+            }
+            
+            // Handle potential floating point issues
+            if (typeof result === 'number') {
+                result = Math.round(result * 1000000) / 1000000;
+            }
+            
+            return result;
+        }
+        
+        function calculate() {
+            if (previousValue === null || operation === null) {
+                return;
+            }
+            
+            const result = performCalculation();
+            displayValue = String(result);
+            previousValue = null;
+            operation = null;
+            resetDisplay = true;
+            updateDisplay();
+        }
+        
+        function clearDisplay() {
+            displayValue = '0';
+            previousValue = null;
+            operation = null;
+            resetDisplay = false;
+            updateDisplay();
+        }
+        
+        function backspace() {
+            if (displayValue.length === 1 || (displayValue.length === 2 && displayValue.startsWith('-'))) {
+                displayValue = '0';
+            } else {
+                displayValue = displayValue.slice(0, -1);
+            }
+            updateDisplay();
+        }
+        
+        function toggleSign() {
+            displayValue = displayValue.startsWith('-') ? 
+                displayValue.slice(1) : 
+                '-' + displayValue;
+            updateDisplay();
+        }
+    </script>
+</body>
+</html>
